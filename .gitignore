@@ -1,0 +1,5 @@
+.idea
+node_modules
+redmatic-telemetry.db
+server.key
+server.cert

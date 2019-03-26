@@ -1,0 +1,20 @@
+{
+  "name": "redmatic-telemetry-server",
+  "version": "1.0.0",
+  "private": true,
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "author": "Sebastian Raff <hobbyquaker@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "body-parser": "^1.18.3",
+    "express": "^4.16.4",
+    "flot": "^3.0.0",
+    "jquery": "^3.3.1",
+    "semver-compare": "^1.0.0",
+    "sqlite3": "^4.0.6"
+  }
+}
