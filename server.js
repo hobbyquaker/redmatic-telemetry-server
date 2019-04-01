@@ -41,7 +41,11 @@ app.get('/data', (req, res) => {
             data.ccuVersions = rows.map(o => [o.ccu, o.count]);
         });
         db.all('SELECT name, COUNT(installation_uuid) AS count FROM node GROUP BY name;', (error, rows) => {
-            data.nodes = rows.map(o => [o.name, o.count]).sort((a, b) => a[1] < b[1]);
+            data.nodes = rows.map(o => [o.name, o.count]).sort((a, b) => {
+                if (a[1] > b[1]) return -1;
+                if (a[1] < b[1]) return 1;
+                return 0;
+            });
         });
         db.all('SELECT redmatic AS version, COUNT(uuid) AS count FROM installation GROUP BY redmatic;', (error, rows) => {
             data.versions = rows.map(o => [o.version, o.count]).sort((a, b) => semverCompare(b[0], a[0]));
