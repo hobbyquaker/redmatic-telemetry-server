@@ -1,10 +1,11 @@
 html, body {
     padding: 0;
     height: 100%;
-    font-family: Monaco;
+    font-family: Helvetica;
+    background-color: #e0e0e0;
 }
 
-#container {
+.container {
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
@@ -16,10 +17,35 @@ html, body {
     height: 480px;
 }
 
-.pie {
-    padding: 0 10px;
+.table {
+    width: 480px;
 }
 
-.pie h3 {
+.table table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 6px;
+}
+
+table td {
+    padding: 2px;
+}
+
+tr:nth-child(odd) {
+    background: #efefef;
+}
+
+.pie, .table {
+    margin: 4px;
+    padding: 0 10px;
+    background-color: white;
+}
+
+.pie h3, .table h3 {
     text-align: center;
+}
+
+.count {
+    text-align: right;
+    width: 80px;
 }

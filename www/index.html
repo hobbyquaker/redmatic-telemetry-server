@@ -7,9 +7,15 @@
 <body>
 <h1>RedMatic Usage Statistics</h1>
 
-<h2>RedMatic Installations: <span id="total"></span></h2>
+<!--
+<a href="/database">Raw Data</a>
+<a href="https://github.com/rdmtc/RedMatic/wiki/Telemetry">Wiki</a>
+-->
 
-<div id="container">
+<h2>RedMatic Installations: <span id="total"></span> </h2>
+<p>CCU3: <span id="total-ccu3"></span>, RaspberryMatic: <span id="total-rm"></span></p>
+
+<div class="container">
     <div class="pie">
         <h3>RedMatic Versions</h3>
         <div id="redmatic-versions"></div>
@@ -24,9 +30,20 @@
     </div>
 </div>
 
-<h2>Installed Nodes</h2>
-<table id="nodes"></table>
-
+<div class="container">
+    <div class="table">
+        <h3>Installed Nodes</h3>
+        <table id="nodes"></table>
+    </div>
+    <div class="table">
+        <h3>RedMatic Versions</h3>
+        <table id="redmatic-versions-table"></table>
+        <h3>CCU Versions</h3>
+        <table id="ccu-versions-table"></table>
+        <h3>CCU Platforms</h3>
+        <table id="ccu-platforms-table"></table>
+    </div>
+</div>
 <script src="node_modules/jquery/dist/jquery.min.js"></script>
 <script src="node_modules/flot/dist/es5/jquery.flot.js"></script>
 
