@@ -41,7 +41,9 @@ app.get('/data', (req, res) => {
             data.ccuVersions = rows.map(o => [o.ccu, o.count]);
         });
         db.all('SELECT name, COUNT(installation_uuid) AS count FROM node GROUP BY name;', (error, rows) => {
-            data.nodes = rows.map(o => [o.name, o.count]).sort((a, b) => {
+            data.nodes = rows.filter(o => {
+                return (o.name.startsWith('redmatic-') || o.name.startsWith('node-red-'));
+            }).map(o => [o.name, o.count]).sort((a, b) => {
                 if (a[1] > b[1]) return -1;
                 if (a[1] < b[1]) return 1;
                 return 0;
