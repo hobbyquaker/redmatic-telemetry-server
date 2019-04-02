@@ -39,7 +39,7 @@ app.get('/data', (req, res) => {
             Object.assign(data, row);
         });
         db.all('SELECT product, COUNT(uuid) AS count FROM installation GROUP BY product ORDER BY count DESC;', (error, rows) => {
-            data.product = rows.map(o => [o.product, o.count]);
+            data.products = rows.map(o => [o.product, o.count]);
         });
         db.all('SELECT platform, COUNT(uuid) AS count FROM installation GROUP BY platform ORDER BY count DESC;', (error, rows) => {
             data.platforms = rows.map(o => [o.platform, o.count]);
