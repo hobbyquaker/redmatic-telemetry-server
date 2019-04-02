@@ -19,6 +19,10 @@ const keyfile = process.env.KEY || path.join(__dirname, '/server.key');
 const db = new sqlite3.Database(dbfile);
 db.exec(fs.readFileSync(path.join(__dirname, '/redmatic-telemetry.sql')).toString());
 
+db.on('error', err => {
+    log(err.message);
+});
+
 const app = express();
 app.use(express.static(path.join(__dirname, 'www')));
 
