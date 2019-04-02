@@ -81,6 +81,7 @@ function processData(headers, data) {
             redmatic: data.redmatic,
             ccu: data.ccu.VERSION,
             platform: data.ccu.PLATFORM,
+            product: data.ccu.PRODUCT
         };
         delete data['ccu'];
         delete data['redmatic'];
