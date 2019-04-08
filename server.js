@@ -105,7 +105,7 @@ function processData(headers, data) {
 function insertData(inst, nodes) {
     log('insert', JSON.stringify(inst));
     db.serialize(() => {
-        db.run('BEGIN TRANSACTION;');
+        //db.run('BEGIN TRANSACTION;');
         db.run('INSERT INTO installation (uuid, redmatic, initial, ccu, platform, product, created, counter) VALUES (?,?,?,?,?,?,CURRENT_TIMESTAMP,0);', [inst.uuid, inst.redmatic, inst.redmatic, inst.ccu, inst.platform, inst.product]);
         updateNodes(inst.uuid, nodes);
         db.run('COMMIT;');
@@ -115,7 +115,7 @@ function insertData(inst, nodes) {
 function updateData(inst, nodes) {
     log('update', inst.uuid);
     db.serialize(() => {
-        db.run('BEGIN TRANSACTION;');
+        //db.run('BEGIN TRANSACTION;');
         db.run('UPDATE installation SET redmatic=?, ccu=?, platform=?, product=?, updated=CURRENT_TIMESTAMP, counter=counter+1 WHERE uuid=?;', [inst.redmatic, inst.ccu, inst.platform, inst.product, inst.uuid]);
         updateNodes(inst.uuid, nodes);
         db.run('COMMIT;');
