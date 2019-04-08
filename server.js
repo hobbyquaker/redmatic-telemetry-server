@@ -153,4 +153,3 @@ function exit(signal) {
 
 exit('SIGTERM');
 exit('SIGINT');
-exit('SIGKILL');
