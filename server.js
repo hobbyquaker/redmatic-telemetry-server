@@ -145,8 +145,8 @@ process.on('SIGTERM', () => {
     });
 });
 
-process.on('SIGINT', () => {
-    log('sigint');
+process.on('SIGKILL', () => {
+    log('sigkill');
     db.close(err => {
         log('db.close', err);
         process.exit(0);
