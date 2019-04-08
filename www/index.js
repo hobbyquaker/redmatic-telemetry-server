@@ -14,7 +14,7 @@ $(document).ready(() => {
         data.products.forEach(node => {
             const [name, count] = node;
             let percent = Math.round(100 * count / data.total);
-            $('#redmatic-products-table').append(`<tr><td>${name}</td><td class="count">${count}</td><td class="count">(${percent}%)</td></tr>`);
+            $('#ccu-products-table').append(`<tr><td>${name}</td><td class="count">${count}</td><td class="count">(${percent}%)</td></tr>`);
         });
 
 
