@@ -138,11 +138,17 @@ function log() {
 }
 
 process.on('SIGTERM', () => {
-    db.close();
-    process.exit(0);
+    log('sigterm');
+    db.close(err => {
+        log('db.close', err);
+        process.exit(0);
+    });
 });
 
 process.on('SIGINT', () => {
-    db.close();
-    process.exit(0);
+    log('sigint');
+    db.close(err => {
+        log('db.close', err);
+        process.exit(0);
+    });
 });
