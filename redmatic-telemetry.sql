@@ -1,5 +1,5 @@
 --
--- File generated with SQLiteStudio v3.2.1 on Di. Apr. 2 21:46:13 2019
+-- File generated with SQLiteStudio v3.2.1 on Mo. Apr. 8 21:03:36 2019
 --
 -- Text encoding used: UTF-8
 --
@@ -12,6 +12,7 @@ CREATE TABLE installation (
                            NOT NULL
                            PRIMARY KEY,
     redmatic VARCHAR (36),
+    initial  VARCHAR (36),
     ccu      VARCHAR (36),
     platform VARCHAR (255),
     product  VARCHAR (255),

@@ -71,8 +71,6 @@ https.createServer({
     log(pkg.name, 'listening on', 'https://localhost:' + port);
 });
 
-
-
 function processData(headers, data) {
     if (
         headers['user-agent'].startsWith('curl/')
@@ -105,9 +103,9 @@ function processData(headers, data) {
 }
 
 function insertData(inst, nodes) {
-    log('insert', inst.uuid);
+    log('insert', JSON.stringify(inst));
     db.serialize(() => {
-        db.run('INSERT INTO installation (uuid, redmatic, ccu, platform, product, created, counter) VALUES (?,?,?,?,?,CURRENT_TIMESTAMP,0);', [inst.uuid, inst.redmatic, inst.ccu, inst.platform, inst.product]);
+        db.run('INSERT INTO installation (uuid, redmatic, initial, ccu, platform, product, created, counter) VALUES (?,?,?,?,?,?,CURRENT_TIMESTAMP,0);', [inst.uuid, inst.redmatic, inst.redmatic, inst.ccu, inst.platform, inst.product]);
         updateNodes(inst.uuid, nodes);
     });
 }
@@ -138,3 +136,13 @@ function log() {
         ('000' + d.getMilliseconds()).slice(-3);
     console.log([ts, ...arguments].join(' '));
 }
+
+process.on('SIGTERM', () => {
+    db.close();
+    process.exit(0);
+});
+
+process.on('SIGINT', () => {
+    db.close();
+    process.exit(0);
+});
