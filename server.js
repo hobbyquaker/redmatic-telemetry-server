@@ -105,23 +105,27 @@ function processData(headers, data) {
 function insertData(inst, nodes) {
     log('insert', JSON.stringify(inst));
     db.serialize(() => {
-        db.run('BEGIN TRANSACTION; INSERT INTO installation (uuid, redmatic, initial, ccu, platform, product, created, counter) VALUES (?,?,?,?,?,?,CURRENT_TIMESTAMP,0);', [inst.uuid, inst.redmatic, inst.redmatic, inst.ccu, inst.platform, inst.product]);
+        db.run('BEGIN TRANSACTION;');
+        db.run('INSERT INTO installation (uuid, redmatic, initial, ccu, platform, product, created, counter) VALUES (?,?,?,?,?,?,CURRENT_TIMESTAMP,0);', [inst.uuid, inst.redmatic, inst.redmatic, inst.ccu, inst.platform, inst.product]);
         updateNodes(inst.uuid, nodes);
+        db.run('COMMIT;');
     });
 }
 
 function updateData(inst, nodes) {
     log('update', inst.uuid);
     db.serialize(() => {
-        db.run('BEGIN TRANSACTION; UPDATE installation SET redmatic=?, ccu=?, platform=?, product=?, updated=CURRENT_TIMESTAMP, counter=counter+1 WHERE uuid=?;', [inst.redmatic, inst.ccu, inst.platform, inst.product, inst.uuid]);
+        db.run('BEGIN TRANSACTION;');
+        db.run('UPDATE installation SET redmatic=?, ccu=?, platform=?, product=?, updated=CURRENT_TIMESTAMP, counter=counter+1 WHERE uuid=?;', [inst.redmatic, inst.ccu, inst.platform, inst.product, inst.uuid]);
         updateNodes(inst.uuid, nodes);
+        db.run('COMMIT;');
     });
 }
 
 function updateNodes(uuid, nodes) {
     db.run('DELETE FROM node WHERE installation_uuid=?', uuid);
     Object.keys(nodes).forEach(name => {
-        db.run('INSERT INTO node (name, version, installation_uuid) VALUES (?,?,?); COMMIT;', [name, nodes[name], uuid]);
+        db.run('INSERT INTO node (name, version, installation_uuid) VALUES (?,?,?);', [name, nodes[name], uuid]);
     });
 }
 
