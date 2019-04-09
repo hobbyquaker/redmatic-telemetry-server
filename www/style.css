@@ -12,14 +12,27 @@ html, body {
     align-items: flex-start;
 }
 
-#redmatic-versions, #ccu-versions,  #ccu-platforms {
-    width: 480px;
-    height: 480px;
+#redmatic-versions, #ccu-versions,  #ccu-platforms, #ccu-products {
+    width: calc(100vw - 44px);
+    height: calc(100vw - 36px);
 }
 
 .table {
-    width: 480px;
+    width: 100%;
 }
+
+@media (min-width: 981px) {
+    #redmatic-versions, #ccu-versions,  #ccu-platforms, #ccu-products {
+        width: calc(50vw - 36px);
+        height: calc(50vw - 36px);
+    }
+
+    .table {
+        width: calc(50vw - 36px);
+    }
+}
+
+
 
 .table table {
     width: 100%;
@@ -48,4 +61,11 @@ tr:nth-child(odd) {
 .count {
     text-align: right;
     width: 80px;
+}
+
+#byday {
+    width: calc(100% - 8px);
+    height: 50%;
+    background-color: white;
+    margin: 4px;
 }

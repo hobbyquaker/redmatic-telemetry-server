@@ -12,7 +12,7 @@ const bodyParser = require('body-parser');
 const semverCompare = require('semver-compare');
 
 const port = parseInt(process.env.PORT, 10) || 8443;
-const dbfile = process.env.DB || path.join(__dirname, 'redmatic-telemetry.db');
+const dbfile = process.env.DB || path.join(__dirname, 'redmatic.db');
 const certfile = process.env.CERT || path.join(__dirname, '/server.cert');
 const keyfile = process.env.KEY || path.join(__dirname, '/server.key');
 
@@ -34,26 +34,31 @@ app.get('/database', (req, res) => {
 app.get('/data', (req, res) => {
     log('get /data');
     const data = {};
+    const timespan = parseInt(req.query.timespan, 10) || 36500;
+    const where = 'WHERE (created > (SELECT DATETIME("now", "-' + timespan + ' day")) OR (updated > (SELECT DATETIME("now", "-' + timespan + ' day"))))';
     db.serialize(() => {
-        db.get('SELECT COUNT(redmatic) AS total FROM installation;', (error, row) => {
+        db.get('SELECT COUNT(redmatic) AS total FROM installation ' + where + ';', (error, row) => {
             Object.assign(data, row);
         });
-        db.all('SELECT product, COUNT(uuid) AS count FROM installation GROUP BY product ORDER BY count DESC;', (error, rows) => {
+        db.all('SELECT product, COUNT(uuid) AS count FROM installation ' + where + ' GROUP BY product ORDER BY count DESC;', (error, rows) => {
             data.products = rows.map(o => [o.product, o.count]);
         });
-        db.all('SELECT platform, COUNT(uuid) AS count FROM installation GROUP BY platform ORDER BY count DESC;', (error, rows) => {
+        db.all('SELECT platform, COUNT(uuid) AS count FROM installation ' + where + ' GROUP BY platform  ORDER BY count DESC;', (error, rows) => {
             data.platforms = rows.map(o => [o.platform, o.count]);
         });
-        db.all('SELECT ccu, COUNT(uuid) AS count FROM installation GROUP BY ccu ORDER BY count DESC;', (error, rows) => {
+        db.all('SELECT ccu, COUNT(uuid) AS count FROM installation ' + where + ' GROUP BY ccu ORDER BY count DESC;', (error, rows) => {
             data.ccuVersions = rows.map(o => [o.ccu, o.count]);
         });
-        db.all('SELECT name, COUNT(installation_uuid) AS count FROM node GROUP BY name ORDER BY count DESC;', (error, rows) => {
+        db.all('SELECT node.name AS name, COUNT(node.installation_uuid) AS count FROM node LEFT JOIN installation ON installation.uuid = node.installation_uuid ' + where + ' GROUP BY name ORDER BY count DESC;', (error, rows) => {
             data.nodes = rows.filter(o => {
                 return (o.name.startsWith('redmatic-') || o.name.startsWith('node-red-'));
             }).map(o => [o.name, o.count]);
         });
-        db.all('SELECT redmatic AS version, COUNT(uuid) AS count FROM installation GROUP BY redmatic;', (error, rows) => {
+        db.all('SELECT redmatic AS version, COUNT(uuid) AS count FROM installation ' + where + ' GROUP BY redmatic;', (error, rows) => {
             data.versions = rows.map(o => [o.version, o.count]).sort((a, b) => semverCompare(b[0], a[0]));
+        });
+        db.all('SELECT strftime("%Y-%m-%d", created) AS date, strftime("%s", strftime("%Y-%m-%d", created)) AS ts, COUNT(created) AS count FROM installation GROUP BY date ORDER BY date;', (error, rows) => {
+            data.byday = rows.map(o => [parseInt(o.ts, 10) * 1000, o.count]);
             res.json(data);
         });
     });
