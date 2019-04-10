@@ -57,7 +57,13 @@ app.get('/data', (req, res) => {
         db.all('SELECT redmatic AS version, COUNT(uuid) AS count FROM installation ' + where + ' GROUP BY redmatic;', (error, rows) => {
             data.versions = rows.map(o => [o.version, o.count]).sort((a, b) => semverCompare(b[0], a[0]));
         });
-        db.all('SELECT strftime("%Y-%m-%d", created) AS date, strftime("%s", strftime("%Y-%m-%d", created)) AS ts, COUNT(created) AS count FROM installation GROUP BY date ORDER BY date;', (error, rows) => {
+        let query;
+        if (timespan > 7) {
+            query = 'SELECT strftime("%Y-%m-%d", created) AS date, strftime("%s", strftime("%Y-%m-%d", created)) AS ts, COUNT(created) AS count FROM installation WHERE created > (SELECT DATETIME("now", "-' + timespan + ' day")) GROUP BY date ORDER BY date;'
+        } else {
+            query = 'SELECT strftime("%Y-%m-%d %H:00:00", created) AS date, strftime("%s", strftime("%Y-%m-%d %H:00:00", created)) AS ts, COUNT(created) AS count FROM installation WHERE created > (SELECT DATETIME("now", "-' + timespan + ' day")) GROUP BY date ORDER BY date;'
+        }
+        db.all(query, (error, rows) => {
             data.byday = rows.map(o => [parseInt(o.ts, 10) * 1000, o.count]);
             res.json(data);
         });

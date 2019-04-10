@@ -1,7 +1,9 @@
 $(document).ready(() => {
 
     function getData() {
-        $.getJSON('data?timespan=' + $('#timespan').val(), (data, success) => {
+        const timespan = $('#timespan').val();
+
+        $.getJSON('data?timespan=' + timespan, (data, success) => {
 
 
 
@@ -13,6 +15,19 @@ $(document).ready(() => {
             $('#ccu-versions-table').html('');
             $('#ccu-platforms-table').html('');
 
+            let timeformat;
+            let minTickSize;
+            if (timespan > 7) {
+                timeformat = '%Y-%m-%d';
+                minTickSize = [1, 'day'];
+            } else if (timespan > 1) {
+                timeformat = '%a, %H:%M'
+                minTickSize = [1, 'hour'];
+            } else {
+                timeformat = '%H:%M';
+                minTickSize = [1, 'hour'];
+            }
+
             $.plot($('#byday'), [data.byday], {
                 series: {
                     bars: {
@@ -23,8 +38,8 @@ $(document).ready(() => {
                     show: true,
                     mode: 'time',
                     timeBase: 'milliseconds',
-                    timeformat: "%Y-%m-%d",
-                    minTickSize: [1, 'day'],
+                    timeformat,
+                    minTickSize,
                     rotateTicks: 45
                 },
                 yaxis: {
