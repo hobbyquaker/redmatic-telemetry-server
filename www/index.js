@@ -3,9 +3,9 @@ $(document).ready(() => {
     function getData() {
         const timespan = $('#timespan').val();
 
+        location.hash = '#' + timespan;
+
         $.getJSON('data?timespan=' + timespan, (data, success) => {
-
-
 
             $('#total').html(data.total);
 
@@ -38,6 +38,7 @@ $(document).ready(() => {
                     show: true,
                     mode: 'time',
                     timeBase: 'milliseconds',
+                    timezone: 'browser',
                     timeformat,
                     minTickSize,
                     rotateTicks: 45
@@ -107,6 +108,8 @@ $(document).ready(() => {
 
         });
     }
+
+    $('#timespan').val(parseInt(location.hash.replace('#', ''), 10) || 90);
 
     getData();
 
