@@ -22,7 +22,7 @@ db.on('error', err => {
     log(err.message);
 });
 
-db.exec(fs.readFileSync(path.join(__dirname, '/redmatic-telemetry.sql')).toString());
+//db.exec(fs.readFileSync(path.join(__dirname, '/redmatic-telemetry.sql')).toString());
 
 
 const app = express();
