@@ -28,6 +28,26 @@ db.on('error', err => {
 const app = express();
 app.use(express.static(path.join(__dirname, 'www')));
 
+app.get('/total.svg', (req, res) => {
+    db.get('SELECT COUNT(redmatic) AS total FROM installation;', (error, row) => {
+        res.send(`
+            <svg xmlns="http://www.w3.org/2000/svg" width="156" height="20">
+                <linearGradient id="a" x2="0" y2="100%">
+                    <stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/>
+                </linearGradient>
+                <rect rx="3" width="156" height="20" fill="#555"/><rect rx="3" x="88" width="68" height="20" fill="#007ec6"/>
+                <path fill="#007ec6" d="M88 0h4v20h-4z"/><rect rx="3" width="156" height="20" fill="url(#b)"/>
+                <g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11">
+                    <text x="45" y="15" fill="#010101" fill-opacity=".3">installations</text>
+                    <text x="45" y="14">installations</text>
+                    <text x="121" y="15" fill="#010101" fill-opacity=".3">${data.total}</text>
+                    <text x="121" y="14">${data.total}</text>
+                </g>
+            </svg>        
+        `)
+    });
+});
+
 app.get('/database', (req, res) => {
     log('get /database');
     res.download(dbfile);
