@@ -30,21 +30,17 @@ app.use(express.static(path.join(__dirname, 'www')));
 
 app.get('/total.svg', (req, res) => {
     db.get('SELECT COUNT(redmatic) AS total FROM installation;', (error, row) => {
-        res.send(`
-            <svg xmlns="http://www.w3.org/2000/svg" width="156" height="20">
-                <linearGradient id="a" x2="0" y2="100%">
-                    <stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/>
-                </linearGradient>
-                <rect rx="3" width="156" height="20" fill="#555"/><rect rx="3" x="88" width="68" height="20" fill="#007ec6"/>
-                <path fill="#007ec6" d="M88 0h4v20h-4z"/><rect rx="3" width="156" height="20" fill="url(#b)"/>
-                <g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11">
-                    <text x="45" y="15" fill="#010101" fill-opacity=".3">installations</text>
-                    <text x="45" y="14">installations</text>
-                    <text x="121" y="15" fill="#010101" fill-opacity=".3">${row.total}</text>
-                    <text x="121" y="14">${row.total}</text>
-                </g>
-            </svg>        
-        `)
+        let installs;
+        if (row.total > 9999) {
+            installs = Math.round(row.total / 1000) + 'k'
+        } else if (row.total > 999) {
+            installs = (row.total / 1000).toFixed(1) + 'k'
+        } else {
+            installs = row.total;
+        }
+        res.set('Cache-Control', 'max-age=3600');
+        res.set('Content-Type', 'image/svg+xml;charset=utf-8');
+        res.status(200).send(`<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="80" height="20"><linearGradient id="b" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><clipPath id="a"><rect width="80" height="20" rx="3" fill="#fff"/></clipPath><g clip-path="url(#a)"><path fill="#555" d="M0 0h49v20H0z"/><path fill="#007ec6" d="M49 0h31v20H49z"/><path fill="url(#b)" d="M0 0h80v20H0z"/></g><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="110"><text x="255" y="150" fill="#010101" fill-opacity=".3" transform="scale(.1)" textLength="390">installs</text><text x="255" y="140" transform="scale(.1)" textLength="390">installs</text><text x="635" y="150" fill="#010101" fill-opacity=".3" transform="scale(.1)" textLength="210">${installs}</text><text x="635" y="140" transform="scale(.1)" textLength="210">${installs}</text></g></svg>`);
     });
 });
 

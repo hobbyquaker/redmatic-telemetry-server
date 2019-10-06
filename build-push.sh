@@ -1,6 +1,6 @@
 #!/bin/bash
 
-IMAGE_ID=$(docker build -q . 2>/dev/null | awk '/Successfully built/{print $NF}')
+IMAGE_ID=$(docker build . | awk '/Successfully built/{print $NF}')
 
 echo "IMAGE_ID=$IMAGE_ID"
 
