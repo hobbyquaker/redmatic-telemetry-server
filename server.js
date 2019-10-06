@@ -40,8 +40,8 @@ app.get('/total.svg', (req, res) => {
                 <g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11">
                     <text x="45" y="15" fill="#010101" fill-opacity=".3">installations</text>
                     <text x="45" y="14">installations</text>
-                    <text x="121" y="15" fill="#010101" fill-opacity=".3">${data.total}</text>
-                    <text x="121" y="14">${data.total}</text>
+                    <text x="121" y="15" fill="#010101" fill-opacity=".3">${row.total}</text>
+                    <text x="121" y="14">${row.total}</text>
                 </g>
             </svg>        
         `)
