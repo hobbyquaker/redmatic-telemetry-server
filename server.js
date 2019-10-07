@@ -9,12 +9,17 @@ const sqlite3 = require('sqlite3').verbose();
 const express = require('express');
 const bodyParser = require('body-parser');
 
-const semverCompare = require('semver-compare');
+const semverCompare = require('semantic-compare');
+
+const Ip2cc = require('ip2countrycode');
+const ip2cc = new Ip2cc(path.join(__dirname, 'IP2LOCATION-LITE-DB1.CSV'));
 
 const port = parseInt(process.env.PORT, 10) || 8443;
 const dbfile = process.env.DB || path.join(__dirname, 'redmatic.db');
 const certfile = process.env.CERT || path.join(__dirname, '/server.cert');
 const keyfile = process.env.KEY || path.join(__dirname, '/server.key');
+
+
 
 const db = new sqlite3.Database(dbfile);
 
@@ -61,6 +66,9 @@ app.get('/data', (req, res) => {
         db.all('SELECT product, COUNT(uuid) AS count FROM installation ' + where + ' GROUP BY product ORDER BY count DESC;', (error, rows) => {
             data.products = rows.map(o => [o.product, o.count]);
         });
+        db.all('SELECT cc, COUNT(uuid) AS count FROM installation ' + where + ' GROUP BY cc ORDER BY count DESC;', (error, rows) => {
+            data.countries = rows.map(o => [o.cc, o.count]);
+        });
         db.all('SELECT platform, COUNT(uuid) AS count FROM installation ' + where + ' GROUP BY platform  ORDER BY count DESC;', (error, rows) => {
             data.platforms = rows.map(o => [o.platform, o.count]);
         });
@@ -90,7 +98,7 @@ app.get('/data', (req, res) => {
 
 app.post('/', bodyParser.json(), (req, res) => {
     res.send('');
-    processData(req.headers, req.body);
+    processData(req.headers, req.body, req.connection.remoteAddress.replace('::ffff:', ''));
 });
 
 https.createServer({
@@ -100,13 +108,16 @@ https.createServer({
     log(pkg.name, 'listening on', 'https://localhost:' + port);
 });
 
-function processData(headers, data) {
+function processData(headers, data, ip) {
     if (
         headers['user-agent'].startsWith('curl/')
         && headers['x-redmatic-uuid'].match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{8}/)
         && data && data.ccu && data.redmatic
     ) {
+        const country = ip2cc.lookup(ip);
         const installation = {
+            cc: (country && country.code) || '-',
+            country: (country && country.country) || '-',
             uuid: headers['x-redmatic-uuid'],
             redmatic: data.redmatic,
             ccu: data.ccu.VERSION,
@@ -135,17 +146,17 @@ function insertData(inst, nodes) {
     log('insert', JSON.stringify(inst));
     db.serialize(() => {
         db.run('BEGIN TRANSACTION;');
-        db.run('INSERT INTO installation (uuid, redmatic, initial, ccu, platform, product, created, counter) VALUES (?,?,?,?,?,?,CURRENT_TIMESTAMP,0);', [inst.uuid, inst.redmatic, inst.redmatic, inst.ccu, inst.platform, inst.product]);
+        db.run('INSERT INTO installation (uuid, redmatic, initial, ccu, platform, product, created, counter, cc, country) VALUES (?,?,?,?,?,?,CURRENT_TIMESTAMP,0,?,?);', [inst.uuid, inst.redmatic, inst.redmatic, inst.ccu, inst.platform, inst.product, inst.cc, inst.country]);
         updateNodes(inst.uuid, nodes);
         db.run('COMMIT;');
     });
 }
 
 function updateData(inst, nodes) {
-    log('update', inst.uuid);
+    log('update', inst.uuid, inst.cc);
     db.serialize(() => {
         db.run('BEGIN TRANSACTION;');
-        db.run('UPDATE installation SET redmatic=?, ccu=?, platform=?, product=?, updated=CURRENT_TIMESTAMP, counter=counter+1 WHERE uuid=?;', [inst.redmatic, inst.ccu, inst.platform, inst.product, inst.uuid]);
+        db.run('UPDATE installation SET redmatic=?, ccu=?, platform=?, product=?, cc=?, country=?, updated=CURRENT_TIMESTAMP, counter=counter+1 WHERE uuid=?;', [inst.redmatic, inst.ccu, inst.platform, inst.product, inst.cc, inst.country, inst.uuid]);
         updateNodes(inst.uuid, nodes);
         db.run('COMMIT;');
     });

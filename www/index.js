@@ -80,6 +80,12 @@ $(document).ready(() => {
                 $('#ccu-platforms-table').append(`<tr><td>${name}</td><td class="count">${count}</td><td class="count">(${percent}%)</td></tr>`);
             });
 
+            data.countries.forEach(v => {
+                const [name, count] = v;
+                let percent = Math.round(100 * count / data.total);
+                $('#countries').append(`<tr><td>${name}</td><td class="count">${count}</td><td class="count">(${percent}%)</td></tr>`);
+            });
+
             function labelFormatter(label, series) {
                 return "<div style='font-size:8pt; text-align:center; padding:2px; color:black;'>" + label + "<br/>" + Math.round(series.percent) + "%</div>";
             }
@@ -109,7 +115,7 @@ $(document).ready(() => {
         });
     }
 
-    $('#timespan').val(parseInt(location.hash.replace('#', ''), 10) || 90);
+    $('#timespan').val(parseInt(location.hash.replace('#', ''), 10) || 36500);
 
     getData();
 
