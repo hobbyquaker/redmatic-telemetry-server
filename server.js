@@ -66,8 +66,8 @@ app.get('/data', (req, res) => {
         db.all('SELECT product, COUNT(uuid) AS count FROM installation ' + where + ' GROUP BY product ORDER BY count DESC;', (error, rows) => {
             data.products = rows.map(o => [o.product, o.count]);
         });
-        db.all('SELECT cc, COUNT(uuid) AS count FROM installation ' + where + ' GROUP BY cc ORDER BY count DESC;', (error, rows) => {
-            data.countries = rows.map(o => [o.cc, o.count]);
+        db.all('SELECT cc, country, COUNT(uuid) AS count FROM installation ' + where + ' GROUP BY cc ORDER BY count DESC;', (error, rows) => {
+            data.countries = rows.map(o => [o.cc, o.country, o.count]);
         });
         db.all('SELECT platform, COUNT(uuid) AS count FROM installation ' + where + ' GROUP BY platform  ORDER BY count DESC;', (error, rows) => {
             data.platforms = rows.map(o => [o.platform, o.count]);

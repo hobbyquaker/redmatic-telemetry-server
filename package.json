@@ -1,6 +1,6 @@
 {
   "name": "redmatic-telemetry-server",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "private": true,
   "description": "",
   "main": "server.js",
@@ -11,6 +11,7 @@
   "license": "MIT",
   "dependencies": {
     "body-parser": "^1.18.3",
+    "country-code-emoji": "^1.0.0",
     "express": "^4.16.4",
     "flot": "^3.0.0",
     "ip2countrycode": "^1.0.0",
