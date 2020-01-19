@@ -113,24 +113,24 @@ app.post('/log', bodyParser.raw({limit: '1mb'}), (req, res) => {
         const [nickname] = req.headers['x-redmatic-nick'].split('/');
         const logfile = path.join(nickname, (new Date()).getTime() + '.log');
 
-        console.log(`log upload ${logfile} ${req.body && req.body.length}`);
+        log(`log upload ${logfile} ${req.body && req.body.length}`);
 
         mkdirp(path.join(logPath, nickname), err => {
             if (err) {
-                console.log(err.message);
+                log(err.message);
                 res.status(500).send(err.message);
             } else {
                 zlib.gzip(req.body, (err, body) => {
                     if (err) {
-                        console.log(err.message);
+                        log(err.message);
                         res.status(500).send(err.message);
                     } else {
                         fs.writeFile(path.join(logPath, logfile + '.gz'), body, err => {
                             if (err) {
-                                console.log(err.message);
+                                log(err.message);
                                 res.status(500).send(err.message);
                             } else {
-                                console.log(`wrote ${logfile}.gz`);
+                                log(`wrote ${logfile}.gz`);
                                 res.send(logfile);
                             }
                         });
