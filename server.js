@@ -3,6 +3,9 @@ const pkg = require('./package.json');
 const fs = require('fs');
 const path = require('path');
 const https = require('https');
+const zlib = require('zlib');
+
+const mkdirp = require('mkdirp');
 
 const sqlite3 = require('sqlite3').verbose();
 
@@ -19,7 +22,7 @@ const dbfile = process.env.DB || path.join(__dirname, 'redmatic.db');
 const certfile = process.env.CERT || path.join(__dirname, '/server.cert');
 const keyfile = process.env.KEY || path.join(__dirname, '/server.key');
 
-
+const logPath = process.env.LOGPATH || path.join(__dirname, '/logs');
 
 const db = new sqlite3.Database(dbfile);
 
@@ -99,6 +102,44 @@ app.get('/data', (req, res) => {
 app.post('/', bodyParser.json(), (req, res) => {
     res.send('');
     processData(req.headers, req.body, req.connection.remoteAddress.replace('::ffff:', ''));
+});
+
+app.post('/log', bodyParser.raw({limit: '1mb'}), (req, res) => {
+    if (
+        req.headers['user-agent'].startsWith('curl/')
+        && req.headers['x-redmatic-uuid'].match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{8}/)
+        && req.headers['x-redmatic-nick']
+    ) {
+        const [nickname] = req.headers['x-redmatic-nick'].split('/');
+        const logfile = path.join(nickname, (new Date()).getTime() + '.log');
+
+        console.log(`log upload ${logfile} ${req.body && req.body.length}`);
+
+        mkdirp(path.join(logPath, nickname), err => {
+            if (err) {
+                console.log(err.message);
+                res.status(500).send(err.message);
+            } else {
+                zlib.gzip(req.body, (err, body) => {
+                    if (err) {
+                        console.log(err.message);
+                        res.status(500).send(err.message);
+                    } else {
+                        fs.writeFile(path.join(logPath, logfile + '.gz'), body, err => {
+                            if (err) {
+                                console.log(err.message);
+                                res.status(500).send(err.message);
+                            } else {
+                                console.log(`wrote ${logfile}.gz`);
+                                res.send(logfile);
+                            }
+                        });
+                    }
+                });
+            }
+        });
+    }
+
 });
 
 https.createServer({
