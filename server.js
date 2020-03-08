@@ -176,13 +176,29 @@ function processData(headers, data, ip) {
         && data && data.ccu && data.redmatic
     ) {
         const country = ip2cc.lookup(ip);
+        let platform = data.ccu.PLATFORM;
+        switch (platform) {
+            case 'rpi0':
+                platform = platform + '-armv6l';
+                break;
+            case 'rpi3':
+            case 'rpi4':
+            case 'tinkerboard':
+                platform = platform + '-armv7l';
+                break;
+            case 'ova':
+                platform = platform + '-i686';
+                break;
+            default:
+
+        }
         const installation = {
             cc: (country && country.code) || '-',
             country: (country && country.country) || '-',
             uuid: headers['x-redmatic-uuid'],
             redmatic: data.redmatic,
             ccu: data.ccu.VERSION,
-            platform: data.ccu.PLATFORM,
+            platform,
             product: data.ccu.PRODUCT
         };
         delete data['ccu'];
