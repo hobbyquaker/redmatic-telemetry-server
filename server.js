@@ -11,6 +11,7 @@ const sqlite3 = require('sqlite3').verbose();
 
 const express = require('express');
 const bodyParser = require('body-parser');
+const serveIndex = require('serve-index');
 
 const semverCompare = require('semantic-compare');
 
@@ -34,7 +35,31 @@ db.on('error', err => {
 
 
 const app = express();
+
 app.use(express.static(path.join(__dirname, 'www')));
+
+app.use('/logs', express.static(logPath));
+app.use('/logs', (req, res, next) => {
+    const auth = {login: process.env.USER || 'logs', password: process.env.PASS || 'changeme'};
+
+    const b64auth = (req.headers.authorization || '').split(' ')[1] || '';
+    const [login, password] = new Buffer.from(b64auth, 'base64').toString().split(':');
+
+    if (login && password && login === auth.login && password === auth.password) {
+        return next()
+    }
+
+    res.set('WWW-Authenticate', 'Basic realm="RedMatic Logs"');
+    res.status(401).send('Authentication required.');
+});
+
+app.use('/logs', serveIndex(logPath, {
+    view: 'details',
+    filter: (filename, index, files, dir) => {
+        return filename !== 'lost+found'
+    }
+}));
+
 
 app.get('/total.svg', (req, res) => {
     db.get('SELECT COUNT(redmatic) AS total FROM installation;', (error, row) => {
@@ -104,42 +129,37 @@ app.post('/', bodyParser.json(), (req, res) => {
     processData(req.headers, req.body, req.connection.remoteAddress.replace('::ffff:', ''));
 });
 
-app.post('/log', bodyParser.raw({limit: '1mb'}), (req, res) => {
-    if (
-        req.headers['user-agent'].startsWith('curl/')
-        && req.headers['x-redmatic-uuid'].match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{8}/)
-        && req.headers['x-redmatic-nick']
-    ) {
+app.post('/log', bodyParser.raw({limit: '100kb', inflate: false}), (req, res) => {
+    if (req.headers['user-agent'].startsWith('curl/') && req.headers['x-redmatic-nick']) {
         const [nickname] = req.headers['x-redmatic-nick'].split('/');
-        const logfile = path.join(nickname, (new Date()).getTime() + '.log');
+        const logfile = path.join(nickname, ts() + '.log');
 
-        log(`log upload ${logfile} ${req.body && req.body.length}`);
+        log(`upload ${logfile} ${req.body && req.body.length}`);
 
         mkdirp(path.join(logPath, nickname), err => {
             if (err) {
                 log(err.message);
                 res.status(500).send(err.message);
             } else {
-                zlib.gzip(req.body, (err, body) => {
-                    if (err) {
-                        log(err.message);
-                        res.status(500).send(err.message);
-                    } else {
-                        fs.writeFile(path.join(logPath, logfile + '.gz'), body, err => {
-                            if (err) {
-                                log(err.message);
-                                res.status(500).send(err.message);
-                            } else {
-                                log(`wrote ${logfile}.gz`);
-                                res.send(logfile);
-                            }
-                        });
-                    }
-                });
+                if (err) {
+                    log(err.message);
+                    res.status(500).send(err.message);
+                } else {
+                    fs.writeFile(path.join(logPath, logfile + '.gz'), req.body, err => {
+                        if (err) {
+                            log(err.message);
+                            res.status(500).send(err.message);
+                        } else {
+                            log(`wrote ${logfile}.gz`);
+                            res.send(logfile);
+                        }
+                    });
+                }
             }
         });
+    } else {
+        res.status(401).send('unauthorized');
     }
-
 });
 
 https.createServer({
@@ -211,15 +231,17 @@ function updateNodes(uuid, nodes) {
 }
 
 function log() {
+    console.log([ts(), ...arguments].join(' '));
+}
+
+function ts() {
     const d = new Date();
-    const ts = d.getFullYear() + '-' +
-        ('0' + (d.getMonth() + 1)).slice(-2) + '-' +
-        ('0' + d.getDate()).slice(-2) + ' ' +
-        ('0' + d.getHours()).slice(-2) + ':' +
-        ('0' + d.getMinutes()).slice(-2) + ':' +
-        ('0' + d.getSeconds()).slice(-2) + '.' +
-        ('000' + d.getMilliseconds()).slice(-3);
-    console.log([ts, ...arguments].join(' '));
+    return d.getFullYear() +
+        ('0' + (d.getMonth() + 1)).slice(-2) +
+        ('0' + d.getDate()).slice(-2) + '-' +
+        ('0' + d.getHours()).slice(-2) +
+        ('0' + d.getMinutes()).slice(-2) +
+        ('0' + d.getSeconds()).slice(-2);
 }
 
 function exit(signal) {
