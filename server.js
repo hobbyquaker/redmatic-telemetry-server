@@ -2,8 +2,7 @@ const pkg = require('./package.json');
 
 const fs = require('fs');
 const path = require('path');
-const https = require('https');
-const zlib = require('zlib');
+const http = require('http');
 
 const mkdirp = require('mkdirp');
 
@@ -18,7 +17,7 @@ const semverCompare = require('semantic-compare');
 const Ip2cc = require('ip2countrycode');
 const ip2cc = new Ip2cc(path.join(__dirname, 'IP2LOCATION-LITE-DB1.CSV'));
 
-const port = parseInt(process.env.PORT, 10) || 8443;
+const port = parseInt(process.env.PORT, 10) || 8080;
 const dbfile = process.env.DB || path.join(__dirname, 'redmatic.db');
 const certfile = process.env.CERT || path.join(__dirname, '/server.cert');
 const keyfile = process.env.KEY || path.join(__dirname, '/server.key');
@@ -102,6 +101,7 @@ app.get('/data', (req, res) => {
         });
         db.all('SELECT ccu, COUNT(uuid) AS count FROM installation ' + where + ' GROUP BY ccu ORDER BY count DESC;', (error, rows) => {
             data.ccuVersions = rows.map(o => [o.ccu, o.count]);
+            data.ccuVersions = data.ccuVersions.sort((a, b) => semverCompare(b[0], a[0]));
         });
         db.all('SELECT node.name AS name, COUNT(node.installation_uuid) AS count FROM node LEFT JOIN installation ON installation.uuid = node.installation_uuid ' + where + ' GROUP BY name ORDER BY count DESC;', (error, rows) => {
             data.nodes = rows.filter(o => {
@@ -126,15 +126,17 @@ app.get('/data', (req, res) => {
 
 app.post('/', bodyParser.json(), (req, res) => {
     res.send('');
-    processData(req.headers, req.body, req.connection.remoteAddress.replace('::ffff:', ''));
+    const clientAddress = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+    processData(req.headers, req.body, clientAddress.replace('::ffff:', ''));
 });
 
 app.post('/log', bodyParser.raw({limit: '100kb', inflate: false}), (req, res) => {
     if (req.headers['user-agent'].startsWith('curl/') && req.headers['x-redmatic-nick']) {
         const [nickname] = req.headers['x-redmatic-nick'].split('/');
         const logfile = path.join(nickname, ts() + '.log');
+        const clientAddress = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
 
-        log(`upload ${logfile} ${req.body && req.body.length}`);
+        log(`upload ${clientAddress} ${logfile} ${req.body && req.body.length}`);
 
         mkdirp(path.join(logPath, nickname), err => {
             if (err) {
@@ -162,9 +164,9 @@ app.post('/log', bodyParser.raw({limit: '100kb', inflate: false}), (req, res) =>
     }
 });
 
-https.createServer({
-    key: fs.readFileSync(keyfile),
-    cert: fs.readFileSync(certfile)
+http.createServer({
+   // key: fs.readFileSync(keyfile),
+   // cert: fs.readFileSync(certfile)
 }, app).listen(port, function () {
     log(pkg.name, 'listening on', 'https://localhost:' + port);
 });
@@ -193,8 +195,8 @@ function processData(headers, data, ip) {
 
         }
         const installation = {
-            cc: (country && country.code) || '-',
-            country: (country && country.country) || '-',
+            cc: (country && country.code) || null,
+            country: (country && country.country) || null,
             uuid: headers['x-redmatic-uuid'],
             redmatic: data.redmatic,
             ccu: data.ccu.VERSION,
@@ -215,7 +217,7 @@ function processData(headers, data, ip) {
             }
         });
     } else {
-        log('invalid request');
+        log(ip + ' invalid request');
     }
 }
 

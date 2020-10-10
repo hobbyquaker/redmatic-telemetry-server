@@ -14,6 +14,7 @@ $(document).ready(() => {
             $('#nodes').html('');
             $('#ccu-versions-table').html('');
             $('#ccu-platforms-table').html('');
+            $('#countries').html('');
 
             let timeformat;
             let minTickSize;
@@ -83,7 +84,8 @@ $(document).ready(() => {
             data.countries.forEach(v => {
                 const [cc, name, count] = v;
                 let percent = Math.round(100 * count / data.total);
-                $('#countries').append(`<tr><td>${cc ? flag(String(cc).replace('UK', 'GB')) : '-'}${name || ''}</td><td class="count">${count}</td><td class="count">(${percent}%)</td></tr>`);
+                let country = cc && cc !== '-' && cc !== '--' ? (flag(String(cc).replace('UK', 'GB')) + (name || '')) : '--';
+                $('#countries').append(`<tr><td>${country}</td><td class="count">${count}</td><td class="count">(${percent}%)</td></tr>`);
             });
 
             function labelFormatter(label, series) {
